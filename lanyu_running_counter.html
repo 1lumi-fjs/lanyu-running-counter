@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#102a43">
+<title>蓝鱼跑步助手</title>
+<style>
+:root{color-scheme:dark;--bg:#071521;--panel:#102536;--panel2:#163347;--text:#f4f8fb;--muted:#9fb4c3;--accent:#45d6b5;--accent2:#8ee9d6;--line:#244355;--warn:#ffd166}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#0b2130,#06111b 65%);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+main{max-width:720px;margin:auto;padding:18px 14px 36px}.top{display:flex;align-items:center;gap:12px;margin:4px 0 18px}.logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#45d6b5,#167d9a);display:grid;place-items:center;font-size:26px;color:#04232b}.top h1{font-size:21px;margin:0}.top p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.card{background:rgba(16,37,54,.94);border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 12px 35px #0002}.hero{text-align:center;padding:20px 16px}.eyebrow{color:var(--accent2);font-size:12px;letter-spacing:1.5px}.timer{font-size:clamp(42px,12vw,64px);font-variant-numeric:tabular-nums;font-weight:750;letter-spacing:1px;margin:5px 0 14px}.status{color:var(--muted);font-size:13px;min-height:20px}.buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:16px}.btn{border:0;border-radius:13px;padding:14px 10px;font-size:15px;font-weight:700;color:var(--text);background:#244355;cursor:pointer;touch-action:manipulation}.btn:disabled{opacity:.4;cursor:not-allowed}.primary{background:var(--accent);color:#06252a}.danger{background:#783c48}.subtle{background:#1a394d}.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{background:var(--panel2);border-radius:15px;padding:14px 13px;min-width:0}.stat .label{font-size:12px;color:var(--muted)}.stat .value{font-size:clamp(25px,7vw,34px);font-weight:750;margin-top:5px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.stat .unit{font-size:12px;color:var(--muted);font-weight:500}.section-title{display:flex;align-items:center;justify-content:space-between;font-weight:700;margin-bottom:12px}.section-title small{color:var(--muted);font-weight:400;font-size:12px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row .btn{flex:1;min-width:120px}.hint{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0 0}.field{width:100%;background:#071a27;color:var(--text);border:1px solid var(--line);padding:12px;border-radius:11px;font-size:15px}.history-item{padding:12px 0;border-bottom:1px solid var(--line)}.history-item:last-child{border-bottom:0}.history-date{font-size:13px;color:var(--muted)}.history-main{font-weight:650;margin:5px 0}.pill{display:inline-block;background:#214b51;color:var(--accent2);padding:4px 8px;border-radius:99px;font-size:11px;margin-top:4px}.notice{font-size:13px;line-height:1.65;background:#172f3e;border-radius:12px;padding:12px;color:#c5d6df}.footer{text-align:center;color:#718b9b;font-size:11px;margin:20px 0}
+</style>
+</head>
+<body>
+<main>
+  <header class="top"><div class="logo">🏃</div><div><h1>蓝鱼跑步助手</h1><p>LANYU RUN · 手机网页运动计数</p></div></header>
+  <section class="card hero">
+    <div class="eyebrow">RUNNING TIMER</div>
+    <div id="timer" class="timer">00:00:00</div>
+    <div id="runStatus" class="status">准备就绪，点击开始跑步</div>
+    <div class="buttons">
+      <button id="startBtn" class="btn primary">▶ 开始跑步</button>
+      <button id="pauseBtn" class="btn subtle" disabled>Ⅱ 暂停</button>
+      <button id="finishBtn" class="btn danger" disabled>■ 结束并保存</button>
+      <button id="resetBtn" class="btn subtle">↺ 重置本次</button>
+    </div>
+  </section>
+  <section class="card">
+    <div class="section-title">本次运动 <small id="gpsStatus">GPS 尚未启动</small></div>
+    <div class="stats">
+      <div class="stat"><div class="label">累计步数</div><div class="value" id="steps">0 <span class="unit">步</span></div></div>
+      <div class="stat"><div class="label">跑步距离</div><div class="value" id="distance">0.00 <span class="unit">km</span></div></div>
+      <div class="stat"><div class="label">跑道圈数</div><div class="value" id="laps">0 <span class="unit">圈</span></div></div>
+      <div class="stat"><div class="label">平均配速</div><div class="value" id="pace">--:-- <span class="unit">/km</span></div></div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="section-title">跑道设置 <small>用于手动记圈</small></div>
+    <label for="lapLength" class="hint" style="display:block;margin:0 0 7px">每圈长度（米）</label>
+    <div class="row"><input id="lapLength" class="field" type="number" min="1" max="10000" step="1" value="400" style="flex:1;min-width:100px"><button id="lapBtn" class="btn primary" disabled>＋ 完成一圈</button></div>
+    <p class="hint">圈数由你点击记录；GPS 距离独立计算，不会自动把每圈长度重复加到 GPS 距离中。</p>
+  </section>
+  <section class="card">
+    <div class="section-title">计步与定位</div>
+    <div class="row"><button id="sensorBtn" class="btn subtle">启用运动计步</button><button id="gpsBtn" class="btn subtle">启用 GPS 定位</button></div>
+    <p id="sensorStatus" class="hint">计步状态：尚未启用。部分手机浏览器不支持运动传感器，若不可用可依靠 GPS 和手动记圈。</p>
+    <p class="hint">建议在户外打开定位权限，并允许浏览器访问运动传感器（如果弹出授权提示）。请勿边跑步边操作手机。</p>
+  </section>
+  <section class="card">
+    <div class="section-title">历史记录 <small>保存在当前浏览器</small></div>
+    <div id="history"><p class="hint">还没有保存的跑步记录。</p></div>
+    <div class="row" style="margin-top:12px"><button id="exportBtn" class="btn subtle">导出记录 CSV</button><button id="clearHistoryBtn" class="btn subtle">清空历史</button></div>
+    <p class="hint">数据保存在此浏览器的本地存储中。清除浏览器数据、更换设备或使用无痕模式可能导致记录丢失。</p>
+  </section>
+  <div class="notice">使用提示：GPS 距离是估算值，会受建筑、树木和手机定位精度影响。首次定位可能需要一段时间。计步算法是基于运动传感器的简易估算，不等同于专业运动手表。</div>
+  <div class="footer">蓝鱼跑步助手 · 仅供运动记录参考</div>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let state = 'idle'; // idle, running, paused, finished
+  let startedAt = 0, elapsedBefore = 0, timerId = null;
+  let steps = 0, laps = 0, distanceM = 0, lastPosition = null;
+  let watchId = null, sensor = null, sensorHandler = null;
+  let lastStepAt = 0, magnitudeBaseline = 0, peakSeen = false;
+  let startedDate = null;
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem('lanyuRunHistory') || '[]'); if (!Array.isArray(history)) history=[]; } catch(e) { history=[]; }
+
+  function elapsedMs() { return elapsedBefore + (state === 'running' ? Date.now() - startedAt : 0); }
+  function formatTime(ms) {
+    const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec=s%60;
+    return [h,m,sec].map(n=>String(n).padStart(2,'0')).join(':');
+  }
+  function paceText() {
+    if (distanceM < 20 || elapsedMs() < 1000) return '--:--';
+    const totalSeconds = elapsedMs()/1000 / (distanceM/1000);
+    if (!Number.isFinite(totalSeconds) || totalSeconds > 3599) return '--:--';
+    return `${String(Math.floor(totalSeconds/60)).padStart(2,'0')}:${String(Math.floor(totalSeconds%60)).padStart(2,'0')}`;
+  }
+  function render() {
+    $('timer').textContent = formatTime(elapsedMs());
+    $('steps').innerHTML = `${steps.toLocaleString()} <span class="unit">步</span>`;
+    $('distance').innerHTML = `${(distanceM/1000).toFixed(2)} <span class="unit">km</span>`;
+    $('laps').innerHTML = `${laps} <span class="unit">圈</span>`;
+    $('pace').innerHTML = `${paceText()} <span class="unit">/km</span>`;
+    $('startBtn').disabled = state === 'running' || state === 'paused';
+    $('pauseBtn').disabled = state !== 'running';
+    $('finishBtn').disabled = !['running','paused'].includes(state);
+    $('lapBtn').disabled = !['running','paused'].includes(state);
+    $('runStatus').textContent = ({idle:'准备就绪，点击开始跑步',running:'正在记录运动 · 注意安全',paused:'已暂停，计时和数据记录暂时停止',finished:'本次运动已结束并保存'})[state];
+  }
+  function tick() { render(); }
+  function start() {
+    if (state === 'running') return;
+    if (state === 'paused') { startedAt = Date.now(); state='running'; }
+    else { startedDate = new Date(); startedAt=Date.now(); elapsedBefore=0; state='running'; }
+    if (timerId) clearInterval(timerId);
+    timerId=setInterval(tick,250);
+    render();
+    if (!watchId && navigator.geolocation) startGPS();
+  }
+  function pause() {
+    if (state !== 'running') return;
+    elapsedBefore += Date.now()-startedAt; state='paused';
+    if (timerId) { clearInterval(timerId); timerId=null; }
+    lastPosition=null; render();
+  }
+  function finish() {
+    if (!['running','paused'].includes(state)) return;
+    if (state==='running') elapsedBefore += Date.now()-startedAt;
+    state='finished';
+    if (timerId) { clearInterval(timerId); timerId=null; }
+    lastPosition=null; stopGPS();
+    const item = {
+      date: (startedDate || new Date()).toLocaleString(),
+      duration: formatTime(elapsedBefore), durationMs: elapsedBefore,
+      steps, laps, distanceKm: +(distanceM/1000).toFixed(3),
+      pace: paceText(), lapLengthM: Number($('lapLength').value)||400
+    };
+    history.unshift(item); history=history.slice(0,100); saveHistory(); renderHistory(); render();
+  }
+  function reset() {
+    if (state==='running') { if (!confirm('当前跑步还在进行，确定重置并丢弃本次数据吗？')) return; }
+    if (state==='paused' && !confirm('确定重置并丢弃本次数据吗？')) return;
+    if (timerId) { clearInterval(timerId); timerId=null; }
+    state='idle'; startedAt=0; elapsedBefore=0; steps=0; laps=0; distanceM=0; lastPosition=null; startedDate=null;
+    render();
+  }
+  function addLap() { if (!['running','paused'].includes(state)) return; laps++; render(); }
+  function saveHistory() { try { localStorage.setItem('lanyuRunHistory',JSON.stringify(history)); } catch(e) { alert('无法保存历史记录，可能是浏览器存储不可用。'); } }
+  function renderHistory() {
+    const host=$('history');
+    if (!history.length) { host.innerHTML='<p class="hint">还没有保存的跑步记录。</p>'; return; }
+    host.innerHTML=history.map((r,i)=>`<div class="history-item"><div class="history-date">${escapeHTML(r.date)}</div><div class="history-main">${r.duration}　·　${r.distanceKm.toFixed(2)} km</div><div class="hint">步数 ${Number(r.steps).toLocaleString()} · ${r.laps} 圈 · 配速 ${r.pace}/km</div></div>`).join('');
+  }
+  function escapeHTML(s) { return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function startGPS() {
+    if (!navigator.geolocation) { $('gpsStatus').textContent='此浏览器不支持 GPS'; return; }
+    if (watchId !== null) return;
+    $('gpsStatus').textContent='正在获取定位…';
+    watchId=navigator.geolocation.watchPosition(pos=>{
+      $('gpsStatus').textContent='GPS 已连接';
+      if (state!=='running') { lastPosition=null; return; }
+      const c=pos.coords, now={lat:c.latitude,lon:c.longitude,accuracy:c.accuracy,time:pos.timestamp};
+      if (now.accuracy > 60) { lastPosition=now; return; }
+      if (lastPosition) {
+        const d=haversine(lastPosition.lat,lastPosition.lon,now.lat,now.lon);
+        const dt=Math.max(0.2,(now.time-lastPosition.time)/1000);
+        // Ignore inaccurate jumps and impossible running speeds.
+        if (d>=2 && d/dt<8 && d<100) distanceM+=d;
+      }
+      lastPosition=now; render();
+    },err=>{
+      $('gpsStatus').textContent=({1:'定位权限被拒绝',2:'暂时无法获取定位',3:'定位超时'})[err.code]||'GPS 定位失败';
+      watchId=null;
+    },{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+  }
+  function stopGPS() { if (watchId!==null && navigator.geolocation) navigator.geolocation.clearWatch(watchId); watchId=null; lastPosition=null; }
+  function haversine(lat1,lon1,lat2,lon2) {
+    const R=6371000, rad=Math.PI/180, dLat=(lat2-lat1)*rad, dLon=(lon2-lon1)*rad;
+    const a=Math.sin(dLat/2)**2+Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLon/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+  async function enableSensor() {
+    const status=$('sensorStatus');
+    if (sensor) { status.textContent='计步状态：运动传感器已启用。'; return; }
+    try {
+      if (typeof DeviceMotionEvent==='undefined') throw new Error('此浏览器不支持运动传感器');
+      if (typeof DeviceMotionEvent.requestPermission==='function') {
+        const p=await DeviceMotionEvent.requestPermission();
+        if (p!=='granted') throw new Error('未获得运动传感器权限');
+      }
+      sensorHandler = ev => {
+        if (state!=='running') return;
+        const a=ev.accelerationIncludingGravity || ev.acceleration;
+        if (!a || a.x==null || a.y==null || a.z==null) return;
+        const mag=Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+        // A deliberately simple high-pass / peak detector; approximate only.
+        const delta=Math.abs(mag-magnitudeBaseline);
+        magnitudeBaseline=magnitudeBaseline*0.82+mag*0.18;
+        const now=Date.now();
+        if (delta>2.1) peakSeen=true;
+        if (peakSeen && delta<0.9) {
+          if (now-lastStepAt>280 && now-lastStepAt<1500) { steps++; render(); }
+          lastStepAt=now; peakSeen=false;
+        }
+      };
+      window.addEventListener('devicemotion',sensorHandler);
+      sensor=true;
+      status.textContent='计步状态：已启用简易运动传感器计步。请先走动测试，结果可能有误差。';
+    } catch(e) { status.textContent='计步未启用：'+e.message+'。请尝试 HTTPS 页面、允许传感器权限，或使用支持运动传感器的浏览器。'; }
+  }
+  $('startBtn').addEventListener('click',start);
+  $('pauseBtn').addEventListener('click',pause);
+  $('finishBtn').addEventListener('click',finish);
+  $('resetBtn').addEventListener('click',reset);
+  $('lapBtn').addEventListener('click',addLap);
+  $('gpsBtn').addEventListener('click',startGPS);
+  $('sensorBtn').addEventListener('click',enableSensor);
+  $('clearHistoryBtn').addEventListener('click',()=>{
+    if (!confirm('确定清空所有历史记录吗？此操作无法撤销。')) return;
+    history=[]; saveHistory(); renderHistory();
+  });
+  $('exportBtn').addEventListener('click',()=>{
+    if (!history.length) { alert('目前没有可导出的记录。'); return; }
+    const rows=[['日期','时长','步数','圈数','距离(km)','平均配速','每圈长度(m)'],...history.map(r=>[r.date,r.duration,r.steps,r.laps,r.distanceKm,r.pace,r.lapLengthM])];
+    const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+    const a=document.createElement('a'); a.href=url; a.download='蓝鱼跑步记录.csv'; a.click(); URL.revokeObjectURL(url);
+  });
+  document.addEventListener('visibilitychange',()=>{ if (state==='running') render(); });
+  render(); renderHistory();
+})();
+</script>
+</body>
+</html>
